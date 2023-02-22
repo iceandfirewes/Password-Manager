@@ -19,8 +19,8 @@ def PasswordManager(sg, hashedKey):
             print("The message is authentic:", plaintext)
         except ValueError:
             print("Key incorrect or message corrupted")
-    else:
-        pass
+            sg.Popup("Key incorrect or message corrupted. Exiting")
+            return
     sg.theme('DarkAmber')   # Add a touch of color
     # All the stuff inside your window.
     layout = [  [sg.Text('This is your password')],
