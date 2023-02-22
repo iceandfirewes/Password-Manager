@@ -1,10 +1,10 @@
 import PySimpleGUI as sg
 import os.path
-from assets.encryptdecrypt import encryptDecrypt, printMetaData
+from assets.encryptdecrypt import encrypt, printMetaData
 from assets.EntryForm import entryForm
 
 #debug
-encryptDecrypt()
+encrypt()
 # printMetaData()
 #check if file exist
 if os.path.isfile("passwordManagerData.dat"):
