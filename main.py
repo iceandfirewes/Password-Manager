@@ -2,7 +2,6 @@ import PySimpleGUI as sg
 import os.path
 from assets.encryptdecrypt import encrypt, printMetaData
 from assets.EntryForm import entryForm
-
 #debug
 encrypt()
 # printMetaData()

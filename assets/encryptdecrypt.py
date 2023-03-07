@@ -5,7 +5,7 @@ def encrypt():
     hashedKey = hashlib.sha256(str.encode("a")).digest()
     cipher = AES.new(hashedKey, AES.MODE_EAX)
     nonce = cipher.nonce
-    data = b"dataABC"
+    data = b"name:company;email:me@gmail.com;password:password"
     #encrypt the data
     ciphertext, tag = cipher.encrypt_and_digest(data)
     #write the encrypted data in
