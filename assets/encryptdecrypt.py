@@ -1,11 +1,11 @@
 from Crypto.Cipher import AES 
 import hashlib
-def encrypt():
+def encrypt(masterkey, plaintext):
     #create the hashed key and cipher
-    hashedKey = hashlib.sha256(str.encode("a")).digest()
+    hashedKey = hashlib.sha256(str.encode(masterkey)).digest()
     cipher = AES.new(hashedKey, AES.MODE_EAX)
     nonce = cipher.nonce
-    data = b"name:company;email:me@gmail.com;password:password"
+    data = str.encode(plaintext)
     #encrypt the data
     ciphertext, tag = cipher.encrypt_and_digest(data)
     #write the encrypted data in
@@ -23,15 +23,14 @@ def encrypt():
     print(f"tag: {tag} with {len(tag)} length")
     # decrypt(hashedKey, ciphertext, nonce, tag)
 
-def decrypt(hashedKey, ciphertext, nonce, tag):
+def decrypt(hashedKey, cipherText, nonce, tag):
     cipher = AES.new(hashedKey, AES.MODE_EAX, nonce=nonce)
-    plaintext = cipher.decrypt(ciphertext)
-    print(plaintext)
+    plaintext = cipher.decrypt(cipherText)
     try:
         cipher.verify(tag)
-        print("The message is authentic:", plaintext)
+        return plaintext
     except ValueError:
-        print("Key incorrect or message corrupted")
+        return None
 def printMetaData():
     fdMeta = open("passwordManagerMetadata.dat","rb")
     nonce = fdMeta.read(16)
