@@ -17,7 +17,8 @@ def verify(sg, hashedKey):
         if(plaintext := decrypt(hashedKey, cipherText, nonce, tag)):
             print("The message is authentic:", plaintext)
             print("verified. proceeding...")
-            processData(plaintext, passwords)
+            processData(plaintext.decode("utf-8"), passwords)
+            PasswordsManager(sg, passwords)
         else:
             print("Key incorrect or message corrupted")
             sg.Popup("Key incorrect or message corrupted. Exiting")
@@ -27,19 +28,32 @@ def verify(sg, hashedKey):
         PasswordsManager(sg, passwords)
 
 def processData(data,passwords):
-    pass
-
-def PasswordsManager(sg, passwords):
-    #process data. format is website;email;password
     class Password:
         name: str
         email: str
         password: str
-    # for line in tempfd:
-    #     #create temp password
-    #     temp = Password()
-    #     #seperate the clauses
-    #     #set attributes
+        def __str__(self):
+            return (f"name:{self.name} email:{self.email} password:{self.password}")
+    if(data == ""):
+        pass
+    else:
+        for line in data.splitlines():
+            password = Password()
+            for clause in line.split(";"):
+                nameValuePair = clause.split(":")
+                print(nameValuePair)
+                setattr(password,nameValuePair[0],nameValuePair[1])
+            passwords.append(password)
+    return passwords
+def convertToText(passwords):
+    plaintext = ""
+    for password in passwords:
+        temp = password.__dict__
+        plaintext += f"""name:{temp["name"]};email:{temp["name"]};password:{temp["name"]}"""
+    print(plaintext)
+def PasswordsManager(sg, passwords):
+
+    # print(passwords[0].__str__())
     sg.theme('DarkAmber')   # Add a touch of color
     # All the stuff inside your window.
     layout = [  [sg.Text('This is your password')],
@@ -49,5 +63,6 @@ def PasswordsManager(sg, passwords):
     while True:
         event, values = window.read()
         if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
+            convertToText(passwords)
             break
     window.close()
