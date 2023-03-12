@@ -1,5 +1,6 @@
 import os
-from .encryptdecrypt import decrypt
+from .EncryptDecrypt import encrypt, decrypt
+from .Conversion import plainTextToPasswords, passwordsToPlainText
 from Crypto.Cipher import AES 
 def verify(sg, hashedKey):
     passwords = []
@@ -17,41 +18,16 @@ def verify(sg, hashedKey):
         if(plaintext := decrypt(hashedKey, cipherText, nonce, tag)):
             print("The message is authentic:", plaintext)
             print("verified. proceeding...")
-            processData(plaintext.decode("utf-8"), passwords)
-            PasswordsManager(sg, passwords)
+            plainTextToPasswords(plaintext.decode("utf-8"), passwords)
+            PasswordsManager(sg, passwords, hashedKey)
         else:
             print("Key incorrect or message corrupted")
             sg.Popup("Key incorrect or message corrupted. Exiting")
     #if files doesn't exist, proceed with empty string
     else:
-        processData("", passwords)
-        PasswordsManager(sg, passwords)
-
-def processData(data,passwords):
-    class Password:
-        name: str
-        email: str
-        password: str
-        def __str__(self):
-            return (f"name:{self.name} email:{self.email} password:{self.password}")
-    if(data == ""):
-        pass
-    else:
-        for line in data.splitlines():
-            password = Password()
-            for clause in line.split(";"):
-                nameValuePair = clause.split(":")
-                print(nameValuePair)
-                setattr(password,nameValuePair[0],nameValuePair[1])
-            passwords.append(password)
-    return passwords
-def convertToText(passwords):
-    plaintext = ""
-    for password in passwords:
-        temp = password.__dict__
-        plaintext += f"""name:{temp["name"]};email:{temp["name"]};password:{temp["name"]}"""
-    print(plaintext)
-def PasswordsManager(sg, passwords):
+        plainTextToPasswords("", passwords)
+        PasswordsManager(sg, passwords, hashedKey)
+def PasswordsManager(sg, passwords, hashedKey):
 
     # print(passwords[0].__str__())
     sg.theme('DarkAmber')   # Add a touch of color
@@ -63,6 +39,9 @@ def PasswordsManager(sg, passwords):
     while True:
         event, values = window.read()
         if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
-            convertToText(passwords)
+            temp = passwordsToPlainText(passwords)
+            #DEBUG
+            print(temp)
+            encrypt(hashedKey, temp)
             break
     window.close()

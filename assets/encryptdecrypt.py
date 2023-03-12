@@ -1,8 +1,7 @@
 from Crypto.Cipher import AES 
 import hashlib
-def encrypt(masterkey, plaintext):
-    #create the hashed key and cipher
-    hashedKey = hashlib.sha256(str.encode(masterkey)).digest()
+def encrypt(hashedKey, plaintext):
+    #create the cipher
     cipher = AES.new(hashedKey, AES.MODE_EAX)
     nonce = cipher.nonce
     data = str.encode(plaintext)
@@ -17,11 +16,10 @@ def encrypt(masterkey, plaintext):
     fd.write(nonce)
     fd.write(tag)
     fd.close()
-    print(f"hashedKey: {hashedKey}")
-    print(f"ciphertext: {ciphertext}")
-    print(f"nonce: {nonce} with {len(nonce)} length")
-    print(f"tag: {tag} with {len(tag)} length")
-    # decrypt(hashedKey, ciphertext, nonce, tag)
+    # print(f"hashedKey: {hashedKey}")
+    # print(f"ciphertext: {ciphertext}")
+    # print(f"nonce: {nonce} with {len(nonce)} length")
+    # print(f"tag: {tag} with {len(tag)} length"
 
 def decrypt(hashedKey, cipherText, nonce, tag):
     cipher = AES.new(hashedKey, AES.MODE_EAX, nonce=nonce)
