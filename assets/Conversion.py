@@ -13,7 +13,6 @@ def plainTextToPasswords(data, passwords):
                 password = Password()
                 for clause in line.split(";"):
                     nameValuePair = clause.split(":")
-                    print(nameValuePair)
                     setattr(password,nameValuePair[0],nameValuePair[1])
                 passwords.append(password)
     return passwords

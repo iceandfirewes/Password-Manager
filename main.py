@@ -1,6 +1,6 @@
 import PySimpleGUI as sg
 import os.path
-from assets.EncryptDecrypt import encrypt, printMetaData
+from assets.EncryptDecrypt import encrypt,returnMetadata
 from assets.EntryForm import entryForm
 import hashlib
 #debug

@@ -20,7 +20,6 @@ def encrypt(hashedKey, plaintext):
     # print(f"ciphertext: {ciphertext}")
     # print(f"nonce: {nonce} with {len(nonce)} length")
     # print(f"tag: {tag} with {len(tag)} length"
-
 def decrypt(hashedKey, cipherText, nonce, tag):
     cipher = AES.new(hashedKey, AES.MODE_EAX, nonce=nonce)
     plaintext = cipher.decrypt(cipherText)
@@ -29,10 +28,9 @@ def decrypt(hashedKey, cipherText, nonce, tag):
         return plaintext
     except ValueError:
         return None
-def printMetaData():
+def returnMetadata():
     fdMeta = open("passwordManagerMetadata.dat","rb")
     nonce = fdMeta.read(16)
     tag = fdMeta.read(16)
-    print(f"nonce: {nonce} with {len(nonce)} length")
-    print(f"tag: {tag} with {len(tag)} length")
     fdMeta.close()
+    return (nonce, tag)
