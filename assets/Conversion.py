@@ -1,10 +1,10 @@
 def plainTextToPasswords(data, passwords):
     class Password:
         name: str
-        email: str
+        username: str
         password: str
         def __str__(self):
-            return (f"name:{self.name} email:{self.email} password:{self.password}")
+            return (f"name:{self.name} email:{self.username} password:{self.password}")
     if(data == ""):
         pass
     else:
@@ -20,5 +20,5 @@ def passwordsToPlainText(passwords):
     plainTextList = []
     for password in passwords:
         temp = password.__dict__
-        plainTextList.append(f"""name:{temp["name"]};email:{temp["name"]};password:{temp["name"]}""")
+        plainTextList.append(f"""name:{temp["name"]};username:{temp["username"]};password:{temp["password"]}""")
     return '\n'.join(plainTextList)

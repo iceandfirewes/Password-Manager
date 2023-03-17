@@ -27,8 +27,21 @@ def verify(sg, hashedKey):
 def PasswordsManager(sg, passwords, hashedKey):
     # print(passwords[0].__str__())
     sg.theme('DarkAmber')   # Add a touch of color
+    #table
+    toprow =  ["Name","Username","Password","Comment"]
+    rows = list(map(lambda password:  [password.name, password.username, password.password], passwords))
+    passwordsTable = sg.Table(values=rows, headings=toprow,
+    auto_size_columns=True,
+    display_row_numbers=False,
+    justification='center', key='-TABLE-',
+    selected_row_colors='red on yellow',
+    enable_events=True,
+    expand_x=True,
+    expand_y=True,
+    enable_click_events=True)
     # All the stuff inside your window.
-    layout = [  [sg.Text('This is your password')], sg.TreeData()
+    layout = [  [passwordsTable],
+                [sg.Text('This is your password')],
                 [sg.Button('Ok'), sg.Button('Cancel')] ]
     window = sg.Window('Password Manager', layout)
     # Event Loop to process "events" and get the "values" of the inputs
