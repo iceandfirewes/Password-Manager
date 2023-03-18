@@ -1,6 +1,6 @@
 import os
 from .EncryptDecrypt import encrypt, decrypt, returnMetadata
-from .Conversion import plainTextToPasswords, passwordsToPlainText
+from .Conversion import plainTextToPasswords, passwordsToPlainText, Password
 def PasswordsManager(sg, passwords, hashedKey):
     # print(passwords[0].__str__())
     sg.theme('DarkAmber')   # Add a touch of color
@@ -33,25 +33,38 @@ def PasswordsManager(sg, passwords, hashedKey):
         #handle table interaction
         #event: ('-passwordTable-', '+CLICKED+', (0, 1)) values: {'-passwordTable-': [1]}
         if "+CLICKED+" in event:
+            pass
             # print(f"""You clicked row:{event[2][0]} Column: {event[2][1]}""")
-            pass
+            #get input, create, set attribute, append and update
         if event == "Add":
-            temp = passwordRequestForm(sg, None)
-            #append and update
-            pass
-        #value:{'-passwordTable-': [0]}
+            tempFields = passwordRequestForm(sg)
+            tempPassword = Password()
+            setattr(tempPassword, "name", tempFields["name"])
+            setattr(tempPassword, "username", tempFields["username"])
+            setattr(tempPassword, "password", tempFields["password"])
+            setattr(tempPassword, "comment", tempFields["comment"])
+            passwords.append(tempPassword)
+            window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
+        #example values -> values:{'-passwordTable-': [0]}
+        #get input, create temp, set attribute, override and update
         if event == "Edit":
             if(values["-passwordTable-"] != []):
-                temp = passwordRequestForm(sg, passwords[values["-passwordTable-"][0]])
-                print(temp)
-                #update passwords and table
-            pass
+                tempFields = passwordRequestForm(sg, passwords[values["-passwordTable-"][0]])
+                index = values["-passwordTable-"][0]
+                tempPassword = Password()
+                setattr(tempPassword, "name", tempFields["name"])
+                setattr(tempPassword, "username", tempFields["username"])
+                setattr(tempPassword, "password", tempFields["password"])
+                setattr(tempPassword, "comment", tempFields["comment"])
+                passwords[index] = tempPassword
+                window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
+        #example values -> values:{'-passwordTable-': [0]}
         if event == "Delete":
             if(values["-passwordTable-"] != []):
                 ch = sg.popup_yes_no("Are you sure?",  title="Password Deletion")
                 if ch == "Yes":
-                    print("deleted")
-            pass
+                    passwords.pop(values["-passwordTable-"][0])
+                    window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
     window.close()
 def verify(sg, hashedKey):
     passwords = []
@@ -75,7 +88,7 @@ def verify(sg, hashedKey):
     else:
         plainTextToPasswords("", passwords)
         PasswordsManager(sg, passwords, hashedKey)
-def passwordRequestForm(sg, password):
+def passwordRequestForm(sg, password=None):
     layout = [  [sg.Text("Name"),sg.InputText(default_text="" if password == None else password.name, key="name")],
                 [sg.Text("Username"),sg.InputText(default_text="" if password == None else password.username,key="username")],
                 [sg.Text("Password"),sg.InputText(default_text="" if password == None else password.password,key="password")],
@@ -91,5 +104,5 @@ def passwordRequestForm(sg, password):
         if event == "Ok":
             #input validation
             window.close()
-            return [values["name"], values["username"], values["password"], values["comment"]]
+            return {"name":values["name"], "username":values["username"], "password":values["password"], "comment":values["comment"]}
     window.close()

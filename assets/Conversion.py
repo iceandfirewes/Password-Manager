@@ -1,11 +1,11 @@
+class Password:
+    name: str
+    username: str
+    password: str
+    comment: str
+    def __str__(self):
+        return (f"""name:{self.name};username:{self.username};password:{self.password};comment:{self.comment}""")
 def plainTextToPasswords(data, passwords):
-    class Password:
-        name: str
-        username: str
-        password: str
-        comment: str
-        def __str__(self):
-            return (f"""name:{self.name};username:{self.username};password:{self.password};comment:{self.comment}""")
     if(data == ""):
         pass
     else:
