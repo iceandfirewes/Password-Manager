@@ -14,6 +14,11 @@ Someone that has hashed the word password through SHA256 will know what the pre-
     # Create the Window
     window = sg.Window('Sign In' if flagNewUser else 'Log In', layout)
     # Event Loop to process "events" and get the "values" of the inputs
+    #DEBUG
+    hashedKey = hashlib.sha256(str.encode("a")).digest()
+    verify(sg, hashedKey)
+    window.close()
+    ###################
     while True:
         event, values = window.read()
         if event == 'input--enter':
