@@ -16,48 +16,51 @@ def PasswordsManager(sg, passwords, hashedKey):
     expand_x=True,
     expand_y=True,
     enable_click_events=True)
-    # All the stuff inside your window.
     layout = [  [passwordsTable],
-                [sg.Button('Add'), sg.Button('Edit'), sg.Button('Delete'), sg.Button('Cancel')] ]
-    window = sg.Window('Password Manager', layout)
+                [sg.Button('Add'), sg.Button('Edit'), sg.Button('Delete'), sg.Button("Save"), sg.Button('Exit')] ]
+    window = sg.Window('Password Manager', layout, size=(1000, 300))
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
-        print(f"""event: {event}\nvalues:{values}""")
-        if event == sg.WIN_CLOSED or event == 'Cancel': # if user closes window or clicks cancel
+        #DEBUG
+        # print(f"""event: {event}\nvalues:{values}""")
+        if event == sg.WIN_CLOSED or event == 'Exit':
             temp = passwordsToPlainText(passwords)
             #DEBUG
-            print(temp)
+            # print(temp)
             encrypt(hashedKey, temp)
             break
         #handle table interaction
         #event: ('-passwordTable-', '+CLICKED+', (0, 1)) values: {'-passwordTable-': [1]}
-        if "+CLICKED+" in event:
-            pass
-            # print(f"""You clicked row:{event[2][0]} Column: {event[2][1]}""")
-            #get input, create, set attribute, append and update
+        # if "+CLICKED+" in event:
+        #     pass
+        #get input, create, set attribute, append and update
         if event == "Add":
             tempFields = passwordRequestForm(sg)
-            tempPassword = Password()
-            setattr(tempPassword, "name", tempFields["name"])
-            setattr(tempPassword, "username", tempFields["username"])
-            setattr(tempPassword, "password", tempFields["password"])
-            setattr(tempPassword, "comment", tempFields["comment"])
-            passwords.append(tempPassword)
-            window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
-        #example values -> values:{'-passwordTable-': [0]}
-        #get input, create temp, set attribute, override and update
-        if event == "Edit":
-            if(values["-passwordTable-"] != []):
-                tempFields = passwordRequestForm(sg, passwords[values["-passwordTable-"][0]])
-                index = values["-passwordTable-"][0]
+            #if user cancel the form
+            if(tempFields != None):
                 tempPassword = Password()
                 setattr(tempPassword, "name", tempFields["name"])
                 setattr(tempPassword, "username", tempFields["username"])
                 setattr(tempPassword, "password", tempFields["password"])
                 setattr(tempPassword, "comment", tempFields["comment"])
-                passwords[index] = tempPassword
+                passwords.append(tempPassword)
                 window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
+        #example values -> values:{'-passwordTable-': [0]}
+        #get input, create temp, set attribute, override and update
+        if event == "Edit":
+            if(values["-passwordTable-"] != []):
+                tempFields = passwordRequestForm(sg, passwords[values["-passwordTable-"][0]])
+                #if user cancel the form
+                if(tempFields != None):
+                    selectedPasswordIndex = values["-passwordTable-"][0]
+                    tempPassword = Password()
+                    setattr(tempPassword, "name", tempFields["name"])
+                    setattr(tempPassword, "username", tempFields["username"])
+                    setattr(tempPassword, "password", tempFields["password"])
+                    setattr(tempPassword, "comment", tempFields["comment"])
+                    passwords[selectedPasswordIndex] = tempPassword
+                    window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
         #example values -> values:{'-passwordTable-': [0]}
         if event == "Delete":
             if(values["-passwordTable-"] != []):
@@ -65,6 +68,9 @@ def PasswordsManager(sg, passwords, hashedKey):
                 if ch == "Yes":
                     passwords.pop(values["-passwordTable-"][0])
                     window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
+        if event == "Save":
+            temp = passwordsToPlainText(passwords)
+            encrypt(hashedKey, temp)
     window.close()
 def verify(sg, hashedKey):
     passwords = []
@@ -77,7 +83,8 @@ def verify(sg, hashedKey):
         cipherText = fd.read()
         fd.close()
         if(plaintext := decrypt(hashedKey, cipherText, nonce, tag)):
-            print("The message is authentic:", plaintext)
+            #DEBUG
+            # print("The message is authentic:", plaintext)
             print("verified. proceeding...")
             plainTextToPasswords(plaintext.decode("utf-8"), passwords)
             PasswordsManager(sg, passwords, hashedKey)
@@ -103,6 +110,9 @@ def passwordRequestForm(sg, password=None):
             break
         if event == "Ok":
             #input validation
-            window.close()
-            return {"name":values["name"], "username":values["username"], "password":values["password"], "comment":values["comment"]}
+            if (values["name"] and values["username"] and values["password"]):
+                window.close()
+                return {"name":values["name"], "username":values["username"], "password":values["password"], "comment":values["comment"]}
+            else:
+                sg.popup_auto_close("name/username/password need to be filled")
     window.close()
