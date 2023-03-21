@@ -44,4 +44,5 @@ Please chose your password carefully as it cannot be changed without deleting al
                     if os.path.exists("passwordManagerMetadata.dat"):
                         os.remove("passwordManagerMetadata.dat")
                     sg.Popup("Please relaunch the application.")
+                    break
     window.close()

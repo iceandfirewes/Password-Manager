@@ -30,6 +30,12 @@ def PasswordsManager(sg, passwords, hashedKey):
                 #DEBUG
                 # print(temp)
                 encrypt(hashedKey, temp)
+            #if there is no passwords, just delete both .dat file
+            else:
+                if os.path.exists("passwordManagerData.dat"):
+                    os.remove("passwordManagerData.dat")
+                if os.path.exists("passwordManagerMetadata.dat"):
+                    os.remove("passwordManagerMetadata.dat")
             break
         #handle table interaction
         #event: ('-passwordTable-', '+CLICKED+', (0, 1)) values: {'-passwordTable-': [1]}
