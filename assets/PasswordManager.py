@@ -79,7 +79,7 @@ def verify(sg, hashedKey):
     #if files exists, verifying
     if os.path.isfile("passwordManagerData.dat") & os.path.isfile("passwordManagerMetadata.dat"):
         #read the metadata and the ciphertext
-        print("metadata file exists. verifying...")
+        print("files exists. verifying...")
         nonce,tag  = getMetadata()
         fd = open("passwordManagerData.dat","rb")
         cipherText = fd.read()
