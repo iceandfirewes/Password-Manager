@@ -22,5 +22,5 @@ def passwordsToPlainText(passwords):
     plainTextList = []
     for password in passwords:
         temp = password.__dict__
-        plainTextList.append(f"""name:{temp["name"]};username:{temp["username"]};password:{temp["password"]};comment:{temp["comment"]}""")
-    return '\n'.join(plainTextList)
+        plainTextList.append(f"""name\x1f{temp["name"]}\x1eusername\x1f{temp["username"]}\x1epassword\x1f{temp["password"]}\x1ecomment\x1f{temp["comment"]}""")
+    return '\x1d\n'.join(plainTextList)
