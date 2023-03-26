@@ -9,11 +9,12 @@ def plainTextToPasswords(data, passwords):
     if(data == ""):
         pass
     else:
-        for line in data.splitlines():
+        for line in data.split("\x1d\n"):
             if line != "":
                 password = Password()
-                for clause in line.split(";"):
-                    nameValuePair = clause.split(":")
+                for clause in line.split("\x1e"):
+                    nameValuePair = clause.split("\x1f")
+                    print(nameValuePair)
                     setattr(password,nameValuePair[0],nameValuePair[1])
                 passwords.append(password)
     return passwords
