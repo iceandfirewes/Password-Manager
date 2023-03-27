@@ -14,7 +14,8 @@ def plainTextToPasswords(data, passwords):
                 password = Password()
                 for clause in line.split("\x1e"):
                     nameValuePair = clause.split("\x1f")
-                    print(nameValuePair)
+                    #DEBUG
+                    #print(nameValuePair)
                     setattr(password,nameValuePair[0],nameValuePair[1])
                 passwords.append(password)
     return passwords

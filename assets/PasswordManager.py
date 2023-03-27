@@ -87,6 +87,10 @@ def PasswordsManager(sg, passwords, hashedKey):
             plain = plain.replace("\x1e"," ")
             plain = plain.replace("\x1f"," ")
             pyperclip.copy(plain)
+        elif event == "Input Passwords":
+            if (temp := sg.popup_get_text("Please enter your password", title="Input Passwords")) != None:
+                plainTextToPasswords(temp, passwords)
+                window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
     window.close()
 def verify(sg, hashedKey):
     passwords = []
