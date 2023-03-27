@@ -1,4 +1,5 @@
 import os
+import pyperclip
 from .EncryptDecrypt import encrypt, decrypt, getMetadata
 from .Conversion import plainTextToPasswords, passwordsToPlainText, Password
 def PasswordsManager(sg, passwords, hashedKey):
@@ -17,26 +18,14 @@ def PasswordsManager(sg, passwords, hashedKey):
     expand_y=True,
     enable_click_events=True)
     layout = [  [passwordsTable],
-                [sg.Column([[sg.Button('Add'), sg.Button('Edit'), sg.Button('Delete'), sg.Button("Save"), sg.Button('Exit')]],justification='center')]]
+                [sg.Column([[sg.Button('Add'), sg.Button('Edit'), sg.Button('Delete'), sg.Button("Save"), sg.Button('Exit'), sg.Button("Copy To Clipboard")]],justification='center')]]
     window = sg.Window('Password Manager', layout, size=(1000, 300))
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
         #DEBUG
         # print(f"""event: {event}\nvalues:{values}""")
-        if event == sg.WIN_CLOSED or event == 'Exit':
-            if(len(passwords)):
-                temp = passwordsToPlainText(passwords)
-                #DEBUG
-                # print(temp)
-                encrypt(hashedKey, temp)
-            #if there is no passwords, just delete both .dat file
-            else:
-                if os.path.exists("passwordManagerData.dat"):
-                    os.remove("passwordManagerData.dat")
-                if os.path.exists("passwordManagerMetadata.dat"):
-                    os.remove("passwordManagerMetadata.dat")
-            break
+        
         #handle table interaction
         #event: ('-passwordTable-', '+CLICKED+', (0, 1)) values: {'-passwordTable-': [1]}
         # if "+CLICKED+" in event:
@@ -57,7 +46,7 @@ def PasswordsManager(sg, passwords, hashedKey):
                 window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
         #example values -> values:{'-passwordTable-': [0]}
         #get input, create temp, set attribute, override and update
-        if event == "Edit":
+        elif event == "Edit":
             if(values["-passwordTable-"] != []):
                 #invoke passworkRequestForm(), assign return to tempFields. if not None then proceed
                 if (tempFields := passwordRequestForm(sg, passwords[values["-passwordTable-"][0]]))  != None:
@@ -70,15 +59,34 @@ def PasswordsManager(sg, passwords, hashedKey):
                     passwords[selectedPasswordIndex] = tempPassword
                     window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
         #example values -> values:{'-passwordTable-': [0]}
-        if event == "Delete":
+        elif event == "Delete":
             if(values["-passwordTable-"] != []):
                 ch = sg.popup_yes_no("Are you sure?",  title="Password Deletion")
                 if ch == "Yes":
                     passwords.pop(values["-passwordTable-"][0])
                     window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
-        if event == "Save":
+        elif event == "Save":
             temp = passwordsToPlainText(passwords)
             encrypt(hashedKey, temp)
+        elif event == sg.WIN_CLOSED or event == 'Exit':
+            if(len(passwords)):
+                temp = passwordsToPlainText(passwords)
+                #DEBUG
+                # print(temp)
+                encrypt(hashedKey, temp)
+            #if there is no passwords, just delete both .dat file
+            else:
+                if os.path.exists("passwordManagerData.dat"):
+                    os.remove("passwordManagerData.dat")
+                if os.path.exists("passwordManagerMetadata.dat"):
+                    os.remove("passwordManagerMetadata.dat")
+            break
+        elif event == "Copy To Clipboard":
+            plain = passwordsToPlainText(passwords)
+            plain = plain.replace("\x1d","")
+            plain = plain.replace("\x1e"," ")
+            plain = plain.replace("\x1f"," ")
+            pyperclip.copy(plain)
     window.close()
 def verify(sg, hashedKey):
     passwords = []
