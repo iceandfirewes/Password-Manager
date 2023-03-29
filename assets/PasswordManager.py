@@ -5,6 +5,7 @@ from .Conversion import plainTextToPasswords, passwordsToPlainText, Password
 import csv
 def PasswordsManager(sg, passwords, hashedKey):
     window = initializeUI(sg, passwords)
+    window.bind('<Control-c>',"Password Copy")
     while True:
         event, values = window.read()
         #DEBUG
@@ -56,7 +57,7 @@ def PasswordsManager(sg, passwords, hashedKey):
                 #DEBUG
                 # print(temp)
                 encrypt(hashedKey, temp)
-            #if there is no passwords, just delete both .dat file
+            #if there is no passwords created, just delete both .dat file
             else:
                 if os.path.exists("passwordManagerData.dat"):
                     os.remove("passwordManagerData.dat")
@@ -83,9 +84,10 @@ def PasswordsManager(sg, passwords, hashedKey):
                             setattr(tempPassword, "comment", row[3])
                             passwords.append(tempPassword)
                     updateTable(window, passwords)
-            # if (temp := sg.popup_get_text("Please enter your password", title="Input Passwords")) != None:
-            #     plainTextToPasswords(temp, passwords)
-            #     window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
+        elif event == "Password Copy":
+            #if a password is selected
+            if(values["-passwordTable-"] != []):
+                pyperclip.copy(passwords[index].password)
     window.close()
 
 def verify(sg, hashedKey):
@@ -129,15 +131,17 @@ def initializeUI(sg, passwords):
     enable_click_events=True)
     layout = [  [passwordsTable],
                 [sg.Column([[sg.Button('Add'), sg.Button('Edit'), sg.Button('Delete'), sg.Button("Save"), sg.Button('Exit'), sg.Button("Copy To Clipboard"), sg.Button("Input Passwords")]],justification='center')]]
-    return sg.Window('Password Manager', layout, size=(1000, 300))
+    return sg.Window('Password Manager', layout, size=(1000, 300), finalize=True)
 def updateTable(window, passwords):
     window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
+
 def passwordRequestForm(sg, password=None):
-    layout = [  [sg.Text("Name"), sg.Push(), sg.InputText(default_text="" if password == None else password.name, key="name", size=20)],
+    layout = [  [sg.Text("Name and Password is the minimum")],
+                [sg.Text("Name"), sg.Push(), sg.InputText(default_text="" if password == None else password.name, key="name", size=20)],
                 [sg.Text("Username"), sg.Push(), sg.InputText(default_text="" if password == None else password.username,key="username", size=20)],
                 [sg.Text("Password"), sg.Push(), sg.InputText(default_text="" if password == None else password.password,key="password", size=20)],
                 [sg.Text("Comment"), sg.Push(), sg.InputText(default_text="" if password == None else password.comment, key="comment", size=20)],
-                [sg.Button("Enter")] ]
+                [sg.Button("Enter", bind_return_key=True)] ]
     window = sg.Window("Password Form", layout, modal=True, finalize=True)
     while True:
         event, values = window.read()
@@ -147,9 +151,9 @@ def passwordRequestForm(sg, password=None):
             break
         if event == "Enter":
             #input validation
-            if (values["name"] and values["username"] and values["password"]):
+            if (values["name"] and values["password"]):
                 window.close()
                 return {"name":values["name"], "username":values["username"], "password":values["password"], "comment":values["comment"]}
             else:
-                sg.popup_auto_close("name/username/password need to be filled")
+                sg.popup_auto_close("name/password need to be filled")
     window.close()
