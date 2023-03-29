@@ -18,7 +18,7 @@ Please chose your password carefully as it cannot be changed without deleting al
     # Create the Window
     window = sg.Window('Sign In' if flagNewUser else 'Log In', layout)
     # Event Loop to process "events" and get the "values" of the inputs
-    #DEBUG
+    # DEBUG
     # hashedKey = hashlib.sha256(str.encode("a")).digest()
     # verify(sg, hashedKey)
     # window.close()
