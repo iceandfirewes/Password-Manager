@@ -58,14 +58,18 @@ def initializeUI(sg, passwords):
                 [sg.Column([[sg.Button('Add'), sg.Button('E̲dit', key='Edit'), sg.Button('D̲elete', key='Delete'), sg.Button("S̲ave", key='Save'), sg.Button('Ex̲it', key='Exit'), sg.Button("Copy To Clipboard"), sg.Button("Input Passwords")]],justification='center')]]
     return sg.Window('Password Manager', layout, size=(1000, 300), finalize=True)
 
-def updateTable(window, passwords):
+def updateTable(window, passwords, selectIndex=None):
     window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
-
+    #if a row index is given, select it
+    if(selectIndex):
+        window["-passwordTable-"].update(select_rows=[selectIndex])
 def programLoop(sg, window, passwords, hashedKey):
     while True:
         event, values = window.read()
         #DEBUG
         # print(f"""event: {event}\nvalues:{values}""")
+        # if "+CLICKED+" in event:
+        #     print(f"""event: {event}\nvalues:{values}""")
         #get input, create, set attribute, append and update
         if event == "Add":
             #invoke passworkRequestForm(sg), assign return to tempFields. if not None then proceed
@@ -79,7 +83,10 @@ def programLoop(sg, window, passwords, hashedKey):
                 setattr(tempPassword, "password", tempFields["password"])
                 setattr(tempPassword, "comment", tempFields["comment"])
                 passwords.append(tempPassword)
-                updateTable(window, passwords)
+                updateTable(window, passwords, len(passwords) - 1)
+                # window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)),select_rows=None)
+            window.write_event_value(("-passwordTable-","+CLICKED+",(0,0)), [0])
+            # window.write_event_value("-passwordTable-", [0])
         #example values -> values:{'-passwordTable-': [0]}
         #get input, create temp, set attribute, override and update
         elif event == "Edit":
@@ -93,7 +100,7 @@ def programLoop(sg, window, passwords, hashedKey):
                     setattr(tempPassword, "password", tempFields["password"])
                     setattr(tempPassword, "comment", tempFields["comment"])
                     passwords[selectedPasswordIndex] = tempPassword
-                    updateTable(window, passwords)        #example values -> values:{'-passwordTable-': [0]}
+                    updateTable(window, passwords, selectedPasswordIndex)
         elif event == "Delete":
             passwordDeleteForm(sg, window, values, passwords)
         elif event == "Save":
@@ -146,6 +153,7 @@ def passwordRequestForm(sg, password=None):
             else:
                 sg.popup_auto_close("name/password need to be filled")
     window.close()
+
 def passwordDeleteForm(sg, rootWindow, rootValues,passwords):
     if(rootValues["-passwordTable-"] != []):
         layout = [
