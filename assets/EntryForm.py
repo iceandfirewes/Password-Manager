@@ -13,10 +13,11 @@ Please chose your password carefully as it cannot be changed without deleting al
     layout = [  
                 [sg.Text(textwrap.TextWrapper(width=50).fill(text=info))],
                 [sg.Text(f"Please {'create' if flagNewUser else 'enter'} your master key"), sg.InputText(key="input--key", size=20)],
-                [sg.Button('Sign in' if flagNewUser else 'Log in',key="input--enter"), sg.Button('Cancel'),sg.Push(), sg.Button('Reset')]  ]
-
+                [sg.Button('Sign In' if flagNewUser else 'Log in', key='Enter'), sg.Button('Cancel'), sg.Push(), sg.Button('Reset')]  ]
     # Create the Window
-    window = sg.Window('Sign In' if flagNewUser else 'Log In', layout)
+    window = sg.Window('Sign In' if flagNewUser else 'Log In', layout, finalize=True)
+    window.bind('<Return>',"Enter")
+    window.bind('<Escape>',"Cancel")
     # Event Loop to process "events" and get the "values" of the inputs
     # DEBUG
     # hashedKey = hashlib.sha256(str.encode("a")).digest()
@@ -25,7 +26,7 @@ Please chose your password carefully as it cannot be changed without deleting al
     ###################
     while True:
         event, values = window.read()
-        if event == 'input--enter':
+        if event == 'Enter':
             if(values["input--key"]):
                 window.close()
                 #create the hashed key
