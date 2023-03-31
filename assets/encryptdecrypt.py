@@ -8,11 +8,11 @@ def encrypt(hashedKey, plaintext):
     #encrypt the data
     ciphertext, tag = cipher.encrypt_and_digest(data)
     #write the encrypted data in
-    fd = open("passwordManagerData.dat","w+b")
+    fd = open("passwordManagerData.dat","wb")
     fd.write(ciphertext)
     fd.close()
     #write the nonce and tag
-    fd = open("passwordManagerMetadata.dat", "w+b")
+    fd = open("passwordManagerMetadata.dat", "wb")
     fd.write(nonce)
     fd.write(tag)
     fd.close()

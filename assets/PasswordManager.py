@@ -3,6 +3,7 @@ import pyperclip
 from .EncryptDecrypt import encrypt, decrypt, getMetadata
 from .Conversion import plainTextToPasswords, passwordsToPlainText, Password
 import csv
+import json
 def PasswordsManager(sg, passwords, hashedKey):
     window = initializeUI(sg, passwords)
     window.bind('<Control-c>',"Password Copy")
@@ -54,12 +55,15 @@ def initializeUI(sg, passwords):
     expand_x=True,
     expand_y=True,
     enable_click_events=True)
-    layout = [  [passwordsTable],
-                [sg.Column([[sg.Button('Add'), sg.Button('E̲dit', key='Edit'), sg.Button('D̲elete', key='Delete'), sg.Button("S̲ave", key='Save'), sg.Button('Ex̲it', key='Exit'), sg.Button("Copy To Clipboard"), sg.Button("Input Passwords")]],justification='center')]]
+    #taskbar
+    menu_def = [['File', ['Export as JSON']]]
+    layout = [  [sg.Menu(menu_def)],
+                [passwordsTable],
+                [sg.Column([[sg.Button('Add'), sg.Button('E̲dit', key='Edit'), sg.Button('D̲elete', key='Delete'), sg.Button("S̲ave", key='Save'), sg.Button('Ex̲it', key='Exit'), sg.Button("Copy To Clipboard"), sg.Button("Import CSV")]],justification='center')]]
     return sg.Window('Password Manager', layout, size=(1000, 300), finalize=True)
 
 def updateTable(window, passwords, selectIndex=None):
-    window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)))
+    window["-passwordTable-"].update(list(map(lambda password: [password.name, password.username, password.password, password.comment], passwords)))
     #if a row index is given, select it
     if(selectIndex):
         window["-passwordTable-"].update(select_rows=[selectIndex])
@@ -71,6 +75,7 @@ def programLoop(sg, window, passwords, hashedKey):
         # if "+CLICKED+" in event:
         #     print(f"""event: {event}\nvalues:{values}""")
         #get input, create, set attribute, append and update
+        #MAIN MENU
         if event == "Add":
             #invoke passworkRequestForm(sg), assign return to tempFields. if not None then proceed
             if (tempFields := passwordRequestForm(sg))  != None:
@@ -125,8 +130,23 @@ def programLoop(sg, window, passwords, hashedKey):
             plain = plain.replace("\x1e"," ")
             plain = plain.replace("\x1f"," ")
             pyperclip.copy(plain)
-        elif event == "Input Passwords":
+        elif event == "Import CSV":
             csvRequestForm(sg, window, passwords)
+        #TASKBAR
+        elif event == "Export as JSON":
+            passwordsObj = {
+                "passwords":list(
+                    map(lambda password: 
+                        {
+                            "name":password.name, 
+                            "username":password.username, 
+                            "password":password.password, 
+                            "comment":password.comment}, passwords))
+                        }
+            with open("PasswordManagerRawData.json","w") as fd:
+                fd.write(json.dumps(passwordsObj, indent=4))
+                fd.close()
+            sg.popup_auto_close("json file has been created. Please make sure to delete it after use.")
     window.close()
 
 def passwordRequestForm(sg, password=None):
