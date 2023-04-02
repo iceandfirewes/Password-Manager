@@ -46,6 +46,8 @@ def initializeUI(sg, passwords):
     #table
     toprow =  ["Name","Username","Password","Comment"]
     rows = list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords))
+    # toprow =  ["ID","Name","Username","Password","Comment"]
+    # rows = [[index, password.name, password.username, password.password, password.comment] for index,password in enumerate(passwords)]
     passwordsTable = sg.Table(values=rows, headings=toprow,
     auto_size_columns=False,
     display_row_numbers=False,
@@ -57,7 +59,10 @@ def initializeUI(sg, passwords):
     enable_click_events=True)
     #taskbar
     menu_def = [['File', ['Export as JSON']]]
+    #layout
+    hotkeyTooltip = f"""Enter - Add\nAlt+E/D/S/X\nCtrl+C - Copy Password\nESC - Exit Current Menu"""
     layout = [  [sg.Menu(menu_def)],
+                [sg.Text("Hotkey", tooltip=hotkeyTooltip)],
                 [passwordsTable],
                 [sg.Column([[sg.Button('Add'), sg.Button('E̲dit', key='Edit'), sg.Button('D̲elete', key='Delete'), sg.Button("S̲ave", key='Save'), sg.Button('Ex̲it', key='Exit'), sg.Button("Copy To Clipboard"), sg.Button("Import CSV")]],justification='center')]]
     return sg.Window('Password Manager', layout, size=(1000, 300), finalize=True)
