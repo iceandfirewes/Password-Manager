@@ -2,6 +2,7 @@ import os
 import pyperclip
 from .EncryptDecrypt import encrypt, decrypt, getMetadata
 from .Conversion import plainTextToPasswords, passwordsToPlainText, Password
+from .ImportExport import exportJSON, importJSON
 import csv
 import json
 def PasswordsManager(sg, passwords, hashedKey):
@@ -21,11 +22,7 @@ def verify(sg, hashedKey):
     if os.path.isfile("passwordManagerData.dat") & os.path.isfile("passwordManagerMetadata.dat"):
         #read the metadata and the ciphertext
         print("files exists. verifying...")
-        nonce,tag  = getMetadata()
-        fd = open("passwordManagerData.dat","rb")
-        cipherText = fd.read()
-        fd.close()
-        if(plaintext := decrypt(hashedKey, cipherText, nonce, tag)):
+        if(plaintext := decrypt(hashedKey)):
             #DEBUG
             # print("The message is authentic:", plaintext)
             print("verified. proceeding...")
@@ -58,6 +55,7 @@ def initializeUI(sg, passwords):
     expand_y=True,
     enable_click_events=True)
     #taskbar
+    # menu_def = [['File', ['Export as JSON',"Import from JSON"]]]
     menu_def = [['File', ['Export as JSON']]]
     #layout
     hotkeyTooltip = f"""Enter - Add\nAlt+E/D/S/X\nCtrl+C - Copy Password\nESC - Exit Current Menu"""
@@ -114,8 +112,7 @@ def programLoop(sg, window, passwords, hashedKey):
         elif event == "Delete":
             passwordDeleteForm(sg, window, values, passwords)
         elif event == "Save":
-            temp = passwordsToPlainText(passwords)
-            encrypt(hashedKey, temp)
+            encrypt(hashedKey, passwordsToPlainText(passwords))
         elif event == sg.WIN_CLOSED or event == 'Exit':
             if(len(passwords)):
                 temp = passwordsToPlainText(passwords)
@@ -139,19 +136,9 @@ def programLoop(sg, window, passwords, hashedKey):
             csvRequestForm(sg, window, passwords)
         #TASKBAR
         elif event == "Export as JSON":
-            passwordsObj = {
-                "passwords":list(
-                    map(lambda password: 
-                        {
-                            "name":password.name, 
-                            "username":password.username, 
-                            "password":password.password, 
-                            "comment":password.comment}, passwords))
-                        }
-            with open("PasswordManagerRawData.json","w") as fd:
-                fd.write(json.dumps(passwordsObj, indent=4))
-                fd.close()
-            sg.popup_auto_close("json file has been created. Please make sure to delete it after use.")
+            exportJSON(sg, passwords)
+        elif event == "Import from JSON":
+            importJSON(sg, window, passwords)
     window.close()
 
 def passwordRequestForm(sg, password=None):

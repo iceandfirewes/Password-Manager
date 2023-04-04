@@ -1,6 +1,7 @@
 import PySimpleGUI as sg
 import os.path
 from assets.EntryForm import entryForm
+from assets.versionControl import versionCheck
 #DEBUG
 # import hashlib
 # from assets.EncryptDecrypt import encrypt,getMetadata
@@ -9,7 +10,9 @@ from assets.EntryForm import entryForm
 # # print(data.split("\x1d"))
 # encrypt(hashlib.sha256(str.encode("a")).digest(),data)
 # getMetadata()
-
+version = "1.3.0"
+#check version file. COMMENT THIS OUT
+# versionCheck(sg)
 #check if files exist
 if os.path.isfile("passwordManagerData.dat") & os.path.isfile("passwordManagerMetadata.dat"):
     entryForm(sg, False)
