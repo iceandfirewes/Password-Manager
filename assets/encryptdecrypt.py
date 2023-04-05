@@ -50,3 +50,21 @@ def encryptTest(hashedKey, plaintext):
     fd.write(nonce)
     fd.write(tag)
     fd.close()
+def decryptTest(hashedKey):
+    fd = open("passwordManagerTestData.dat","rb")
+    cipherText = fd.read()
+    fd.close()
+    nonce,tag  = getMetadataTest()
+    cipher = AES.new(hashedKey, AES.MODE_EAX, nonce=nonce)
+    plaintext = cipher.decrypt(cipherText)
+    try:
+        cipher.verify(tag)
+        return plaintext
+    except ValueError:
+        return None
+def getMetadataTest():
+    fdMeta = open("passwordManagerTestMetadata.dat","rb")
+    nonce = fdMeta.read(16)
+    tag = fdMeta.read(16)
+    fdMeta.close()
+    return (nonce, tag)

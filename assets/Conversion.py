@@ -1,14 +1,17 @@
+import json
 class Password:
+    id: int
     name: str
     username: str
     password: str
     comment: str
     def __str__(self):
         return (f"""name:{self.name};username:{self.username};password:{self.password};comment:{self.comment}""")
-def plainTextToPasswords(data, passwords):
-    if(data == ""):
-        pass
+def plaintextToData(text,version,data):
+    if(text == ""):
+        return {"passwords":[],"version":version}
     else:
+        #FIX THIS
         for line in data.split("\x1d\n"):
             if line != "":
                 password = Password()
@@ -17,8 +20,11 @@ def plainTextToPasswords(data, passwords):
                     #DEBUG
                     #print(nameValuePair)
                     setattr(password,nameValuePair[0],nameValuePair[1])
-                passwords.append(password)
+                data["passwords"].append(password)
     return passwords
+def JSONToPasswords(data, passwords):
+    data = json.loads(data)
+    print(data)
 def passwordsToPlainText(passwords):
     plainTextList = []
     for password in passwords:
