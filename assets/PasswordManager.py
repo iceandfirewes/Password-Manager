@@ -1,13 +1,14 @@
 import os
 import pyperclip
 from .EncryptDecrypt import encrypt, decrypt, getMetadata
-from .Conversion import plaintextToData, passwordsToPlainText, Password
+from .Conversion import plaintextToData, JSONToPasswords, Password
 from .ImportExport import exportJSON, importJSON
 import csv
 import json
 version = "1.3.0"
-def PasswordsManager(sg, data, hashedKey):
-    window = initializeUI(sg, data)
+data = None
+def PasswordsManager(sg, passwords, hashedKey):
+    window = initializeUI(sg, passwords)
     window.bind('<Control-c>',"Password Copy")
     window.bind('<Return>',"Add")
     window.bind('<Alt-e>',"Edit")
@@ -15,10 +16,10 @@ def PasswordsManager(sg, data, hashedKey):
     window.bind('<Alt-s>',"Save")
     window.bind('<Alt-x>',"Exit")
     window.bind('<Escape>',"Exit")
-    programLoop(sg, window, data, hashedKey)
+    programLoop(sg, window, passwords, hashedKey)
 
 def verify(sg, hashedKey):
-    data = None
+    
     #if files exists, verifying
     if os.path.isfile("passwordManagerData.dat") & os.path.isfile("passwordManagerMetadata.dat"):
         #read the metadata and the ciphertext
@@ -34,16 +35,16 @@ def verify(sg, hashedKey):
             sg.Popup("Key incorrect or data corrupted. Exiting")
     #if files doesn't exist, proceed with empty string
     elif (not os.path.isfile("passwordManagerData.dat")) and (not os.path.isfile("passwordManagerMetadata.dat")):
-        data = plaintextToData("", version, data)
-        PasswordsManager(sg, data, hashedKey)
+        data = plaintextToData("", version)
+        PasswordsManager(sg, data["passwords"], hashedKey)
     else:
         sg.Popup("One of the .data file is missing. Please supply them or delete both passwordManagerData.data and passwordManagerMetadata.dat to reset.")
 
-def initializeUI(sg, data):
+def initializeUI(sg, passwords):
     sg.theme('DarkAmber')   # Add a touch of color
     #table
     toprow =  ["ID","Name","Username","Password","Comment"]
-    rows = list(map(lambda password:  [password.name, password.username, password.password, password.comment], data["passwords"]))
+    rows = list(map(lambda password:  [password.id, password.name, password.username, password.password, password.comment], passwords))
     # toprow =  ["ID","Name","Username","Password","Comment"]
     # rows = [[index, password.name, password.username, password.password, password.comment] for index,password in enumerate(passwords)]
     passwordsTable = sg.Table(values=rows, headings=toprow,
@@ -66,12 +67,12 @@ def initializeUI(sg, data):
                 [sg.Column([[sg.Button('Add'), sg.Button('E̲dit', key='Edit'), sg.Button('D̲elete', key='Delete'), sg.Button("S̲ave", key='Save'), sg.Button('Ex̲it', key='Exit'), sg.Button("Copy To Clipboard"), sg.Button("Import CSV")]],justification='center')]]
     return sg.Window('Password Manager', layout, size=(1000, 300), finalize=True)
 
-def updateTable(window, data, selectIndex=None):
-    window["-passwordTable-"].update(list(map(lambda password: [password.name, password.username, password.password, password.comment], data["passwords"])))
+def updateTable(window, passwords, selectIndex=None):
+    window["-passwordTable-"].update(list(map(lambda password: [password.id, password.name, password.username, password.password, password.comment], passwords)))
     #if a row index is given, select it
-    if(selectIndex):
+    if(selectIndex != None):
         window["-passwordTable-"].update(select_rows=[selectIndex])
-def programLoop(sg, window, data, hashedKey):
+def programLoop(sg, window, passwords, hashedKey):
     while True:
         event, values = window.read()
         #DEBUG
@@ -87,13 +88,13 @@ def programLoop(sg, window, data, hashedKey):
             # #if user cancel the form
             # if(tempFields != None):
                 tempPassword = Password()
-                setattr(tempPassword, "id", len(data["passwords"]))
+                setattr(tempPassword, "id", len(passwords))
                 setattr(tempPassword, "name", tempFields["name"])
                 setattr(tempPassword, "username", tempFields["username"])
                 setattr(tempPassword, "password", tempFields["password"])
                 setattr(tempPassword, "comment", tempFields["comment"])
-                data["passwords"].append(tempPassword)
-                updateTable(window, data, len(data["passwords"]) - 1)
+                passwords.append(tempPassword)
+                updateTable(window, passwords, len(passwords) - 1)
                 # window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)),select_rows=None)
             window.write_event_value(("-passwordTable-","+CLICKED+",(0,0)), [0])
             # window.write_event_value("-passwordTable-", [0])
