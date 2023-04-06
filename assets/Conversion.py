@@ -5,15 +5,26 @@ class Password:
     username: str
     password: str
     comment: str
+    def __init__(self, id, name, username, password, comment):
+        self.id = id
+        self.name = name
+        self.username = username
+        self.password = password
+        self.comment = comment
     def __str__(self):
         return (f"""name:{self.name};username:{self.username};password:{self.password};comment:{self.comment}""")
-def plaintextToData(text,version):
+    class CustomEncoder(json.JSONEncoder):
+        def default(self, o):
+                return o.__dict__
+
+def plaintextToJSON(text,version):
     if(text == ""):
         return {"passwords":[],"version":version}
     else:
-        test = json.loads(text)
-        print(test)
-        return {"passwords":[],"version":version}
+        data = json.loads(text)
+        passwords = data["passwords"]
+        data["passwords"] = list(map(lambda password:  Password(password["id"], password["name"], password["username"], password["password"], password["comment"]), passwords))
+        return data
         # #FIX THIS
         # for line in data.split("\x1d\n"):
         #     if line != "":
@@ -28,8 +39,17 @@ def plaintextToData(text,version):
 def JSONToPasswords(data, passwords):
     data = json.loads(data)
     print(data)
-def dataToPlainText(data):
-    return json.dumps(data)
+def JSONToPlaintext(data,version):
+    newdata = {
+        "passwords":data["passwords"],
+        "version":version
+    }
+    return json.dumps(newdata,cls=Password.CustomEncoder)
+    # passwordJSONString = list(map(lambda password: password.toJSON(), data["passwords"]))
+    # print(passwordJSONString)
+    # jsonString = f'''{{"password":{data["password"]}}}'''
+    # print(jsonString)
+    # return json.dumps(data["passwords"][0])
     # plainTextList = []
     # for password in passwords:
     #     temp = password.__dict__
