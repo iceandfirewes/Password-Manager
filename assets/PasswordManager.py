@@ -28,7 +28,6 @@ def verify(sg, hashedKey):
             # print("The message is authentic:", plaintext)
             print("verified. proceeding...")
             data = plaintextToJSON(plaintext.decode("utf-8"), version)
-            print(type(data["passwords"]))
             PasswordsManager(sg, data["passwords"], hashedKey)
         else:
             print("Key incorrect or message corrupted")
@@ -43,7 +42,6 @@ def verify(sg, hashedKey):
 def initializeUI(sg, passwords):
     sg.theme('DarkAmber')   # Add a touch of color
     #table
-    print(type(passwords))
     toprow =  ["ID","Name","Username","Password","Comment"]
     rows = list(map(lambda password:  [password.id, password.name, password.username, password.password, password.comment], passwords))
     # rows = list(map(lambda password: [password["id"], password["name"], password["username"], password["password"], password["comment"]], passwords))
@@ -78,7 +76,7 @@ def updateTable(window, passwords, selectIndex=None):
         window["-passwordTable-"].update(select_rows=[selectIndex])
 def programLoop(sg, window, passwords, hashedKey):
     global data
-    global version
+    # global version
     while True:
         event, values = window.read()
         #DEBUG
@@ -88,20 +86,11 @@ def programLoop(sg, window, passwords, hashedKey):
         #get input, create, set attribute, append and update
         #MAIN MENU
         if event == "Add":
-            #invoke passworkRequestForm(sg), assign return to tempFields. if not None then proceed
             if (tempFields := passwordRequestForm(sg))  != None:
-            # tempFields = passwordRequestForm(sg)
-            # #if user cancel the form
-            # if(tempFields != None):
                 tempPassword = Password(len(passwords), tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
                 passwords.append(tempPassword)
                 updateTable(window, passwords, len(passwords) - 1)
-                print(type(passwords))
-                # window["-passwordTable-"].update(list(map(lambda password:  [password.name, password.username, password.password, password.comment], passwords)),select_rows=None)
             window.write_event_value(("-passwordTable-","+CLICKED+",(0,0)), [0])
-            # window.write_event_value("-passwordTable-", [0])
-        #example values -> values:{'-passwordTable-': [0]}
-        #get input, create temp, set attribute, override and update
         elif event == "Edit":
             if(values["-passwordTable-"] != []):
                 #invoke passworkRequestForm(), assign return to tempFields. if not None then proceed
@@ -113,21 +102,10 @@ def programLoop(sg, window, passwords, hashedKey):
         elif event == "Delete":
             passwordDeleteForm(sg, window, values, passwords)
         elif event == "Save":
-            #DEBUG
-            tempPassword = Password()
-            setattr(tempPassword, "id", 0)
-            setattr(tempPassword, "name", "a")
-            setattr(tempPassword, "username", "b")
-            setattr(tempPassword, "password", "c")
-            setattr(tempPassword, "comment", "d")
-            data["passwords"].append(tempPassword)
-            
             encrypt(hashedKey, JSONToPlaintext(data,version))
         elif event == sg.WIN_CLOSED or event == 'Exit':
             if(len(passwords)):
-                temp = JSONToPlaintext(passwords)
-                #DEBUG
-                # print(temp)
+                temp = JSONToPlaintext(data, version)
                 encrypt(hashedKey, temp)
             #if there is no passwords created, just delete both .dat file
             else:
@@ -137,16 +115,20 @@ def programLoop(sg, window, passwords, hashedKey):
                     os.remove("passwordManagerMetadata.dat")
             break
         elif event == "Copy To Clipboard":
-            plain = passwordsToPlainText(passwords, version)
-            plain = plain.replace("\x1d","")
-            plain = plain.replace("\x1e"," ")
-            plain = plain.replace("\x1f"," ")
-            pyperclip.copy(plain)
+            def test(password):
+                name = f"name:{password.name}" if password.name else None
+                username = f"username:{password.username}" if password.username else None
+                passwordP = f"password:{password.password}" if password.password else None
+                comment = f"comment:{password.comment}" if password.comment else None
+                password = [name,username,passwordP, comment]   
+                return " ".join(filter(None,password))
+            listPasswords = list(map(lambda password: test(password), passwords))
+            pyperclip.copy("\n".join(listPasswords))
         elif event == "Import CSV":
             csvRequestForm(sg, window, passwords)
         #TASKBAR
         elif event == "Export as JSON":
-            exportJSON(sg, passwords)
+            exportJSON(sg, passwords, version)
         elif event == "Import from JSON":
             importJSON(sg, window, passwords)
     window.close()
@@ -168,7 +150,6 @@ def passwordRequestForm(sg, password=None):
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
         if event == "Enter":
-            #input validation
             if (values["name"] and values["password"]):
                 window.close()
                 return {"name":values["name"], "username":values["username"], "password":values["password"], "comment":values["comment"]}
@@ -213,11 +194,7 @@ def csvRequestForm(sg,rootWindow, passwords):
                     csv_reader = csv.reader(csv_file, delimiter=',')
                     for index,row in enumerate(csv_reader):
                         if(index):
-                            tempPassword = Password()
-                            setattr(tempPassword, "name", row[0])
-                            setattr(tempPassword, "username", row[1])
-                            setattr(tempPassword, "password", row[2])
-                            setattr(tempPassword, "comment", row[3])
+                            tempPassword = Password(len(passwords),row[0], row[1], row[2], row[3])
                             passwords.append(tempPassword)
                     updateTable(rootWindow, passwords)
                     csvWindow.close()

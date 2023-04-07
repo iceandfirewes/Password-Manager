@@ -1,11 +1,11 @@
 import json
 from .Conversion import Password
-from .versionControl import version
-def exportJSON(sg, passwords):
+def exportJSON(sg, passwords, version):
     passwordsObj = {
                 "passwords":list(
                     map(lambda password: 
                         {
+                            "id": password.id,
                             "name":password.name, 
                             "username":password.username, 
                             "password":password.password, 
@@ -16,6 +16,7 @@ def exportJSON(sg, passwords):
         fd.write(json.dumps(passwordsObj, indent=4))
         fd.close()
     sg.popup_auto_close("json file has been created. Please make sure to delete it after use.")
+#NOT DONE
 def importJSON(sg,rootWindow, passwords):
     layout = [
         [sg.Text("Please select a JSON file")],
@@ -31,7 +32,7 @@ def importJSON(sg,rootWindow, passwords):
         # jsonWindow["Ok"].click()
         # jsonWindow.close()
         # break
-        print(f"""event: {eventJSON}\nvalue:{valuesJSON}""")
+        # print(f"""event: {eventJSON}\nvalue:{valuesJSON}""")
         if(eventJSON == sg.WIN_CLOSED or eventJSON == 'Cancel'):
             break
         elif(eventJSON == "Ok"):

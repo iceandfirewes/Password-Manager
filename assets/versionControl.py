@@ -2,8 +2,7 @@ import os
 import json
 import hashlib
 from .EncryptDecrypt import encryptTest, decrypt
-version = "1.4.0"
-def versionCheck(sg):
+def versionCheck(sg, version):
     if not os.path.isfile("passwordManagerVersion.txt"):
         with open("passwordManagerVersion.txt","w") as fd:
             fd.write(version)
