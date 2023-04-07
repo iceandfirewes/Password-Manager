@@ -1,6 +1,4 @@
 import os
-import json
-import hashlib
 from .EncryptDecrypt import encryptTest, decrypt
 def versionCheck(sg, version):
     if not os.path.isfile("passwordManagerVersion.txt"):
