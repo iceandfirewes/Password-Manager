@@ -63,15 +63,18 @@ def initializeUI(sg, passwords):
     #layout
     hotkeyTooltip = f"""Enter - Add\nAlt+E/D/S/X\nCtrl+C - Copy Password\nESC - Exit Current Menu"""
     layout = [  [sg.Menu(menu_def)],
-                [sg.Text("Hotkey", tooltip=hotkeyTooltip)],
+                [sg.Text("Name Search:"), sg.Input(enable_events=True, key="nameSearch"),sg.Push(), sg.Text("Hotkey", tooltip=hotkeyTooltip)],
                 [passwordsTable],
                 [sg.Column([[sg.Button('Add'), sg.Button('E̲dit', key='Edit'), sg.Button('D̲elete', key='Delete'), sg.Button("S̲ave", key='Save'), sg.Button('Ex̲it', key='Exit'), sg.Button("Copy To Clipboard"), sg.Button("Import CSV")]],justification='center')]]
     return sg.Window('Password Manager', layout, size=(1000, 300), finalize=True)
 
-def updateTable(window, passwords, selectIndex=None):
-    window["-passwordTable-"].update(list(map(lambda password: [password.id, password.name, password.username, password.password, password.comment], passwords)))
-    # window["-passwordTable-"].update(list(map(lambda password: [password["id"], password["name"], password["username"], password["password"], password["comment"]], passwords)))
-    #if a row index is given, select it
+def updateTable(window, passwords, selectIndex=None, nameSearch=None):
+    if nameSearch:
+        #filter password so it only contain password that have nameSearch in them. then map over those passwords
+        filteredPasswords = list(filter(lambda password: nameSearch in password.name ,passwords))
+        window["-passwordTable-"].update(list(map(lambda password: [password.id, password.name, password.username, password.password, password.comment], filteredPasswords)))
+    else:
+        window["-passwordTable-"].update(list(map(lambda password: [password.id, password.name, password.username, password.password, password.comment], passwords)))
     if(selectIndex != None):
         window["-passwordTable-"].update(select_rows=[selectIndex])
 def programLoop(sg, window, passwords, hashedKey):
@@ -80,25 +83,34 @@ def programLoop(sg, window, passwords, hashedKey):
     while True:
         event, values = window.read()
         #DEBUG
-        # print(f"""event: {event}\nvalues:{values}""")
+        # print(f"""event:{event}\nvalues:{values}""")
+        # print(f"""table:{window["-passwordTable-"].Values}\n""")
         # if "+CLICKED+" in event:
         #     print(f"""event: {event}\nvalues:{values}""")
         #get input, create, set attribute, append and update
+        #SEARCH
+        if event == "nameSearch":
+            updateTable(window, passwords, nameSearch=values["nameSearch"])
         #MAIN MENU
-        if event == "Add":
+        elif event == "Add":
+            # passwordRequestFormTest(sg, window, passwords, values, event)
             if (tempFields := passwordRequestForm(sg))  != None:
-                tempPassword = Password(len(passwords), tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
+                #get last item id
+                id = 0 if passwords[-1:] == [] else passwords[-1].id + 1
+                tempPassword = Password(id, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
                 passwords.append(tempPassword)
-                updateTable(window, passwords, len(passwords) - 1)
-            window.write_event_value(("-passwordTable-","+CLICKED+",(0,0)), [0])
+                updateTable(window, passwords, selectIndex=len(passwords) - 1)
         elif event == "Edit":
+            #if a row is selected
             if(values["-passwordTable-"] != []):
-                #invoke passworkRequestForm(), assign return to tempFields. if not None then proceed
-                if (tempFields := passwordRequestForm(sg, passwords[values["-passwordTable-"][0]]))  != None:
-                    selectedPasswordIndex = values["-passwordTable-"][0]
-                    tempPassword = Password(passwords[selectedPasswordIndex].id, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
-                    passwords[selectedPasswordIndex] = tempPassword
-                    updateTable(window, passwords, selectedPasswordIndex)
+                #find selected row ID value, not simple because nameSearch can be applied
+                selectedRow = values["-passwordTable-"][0]
+                selectedPasswordID = window["-passwordTable-"].Values[selectedRow][0]
+                #if user click accept
+                if((tempFields := passwordRequestForm(sg, passwords[selectedPasswordID])) != None):
+                    tempPassword = Password(selectedPasswordID, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
+                    passwords[selectedPasswordID] = tempPassword
+                    updateTable(window, passwords, nameSearch=values["nameSearch"])
         elif event == "Delete":
             passwordDeleteForm(sg, window, values, passwords)
         elif event == "Save":
@@ -156,7 +168,49 @@ def passwordRequestForm(sg, password=None):
             else:
                 sg.popup_auto_close("name/password need to be filled")
     window.close()
-
+# def passwordRequestFormTest(sg, rootWindow, passwords, rootValues, event, password=None):
+#     if event == "Add":
+#         layout = [  [sg.Text("Name and Password is the minimum")],
+#                 [sg.Text("Name"), sg.Push(), sg.InputText(default_text="" if password == None else password.name, key="name", size=20)],
+#                 [sg.Text("Username"), sg.Push(), sg.InputText(default_text="" if password == None else password.username,key="username", size=20)],
+#                 [sg.Text("Password"), sg.Push(), sg.InputText(default_text="" if password == None else password.password,key="password", size=20)],
+#                 [sg.Text("Comment"), sg.Push(), sg.InputText(default_text="" if password == None else password.comment, key="comment", size=20)],
+#                 [sg.Button("Enter", bind_return_key=True)] ]
+#         window = sg.Window("Password Form", layout, modal=True, finalize=True)
+#         window.bind('<Return>',"Enter")
+#         window.bind('<Escape>',"Exit")
+#         while True:
+#             event, values = window.read()
+#             #DEBUG
+#             # print(f"""event: {event}\nvalue:{values}""")
+#             if event == "Exit" or event == sg.WIN_CLOSED:
+#                 break
+#             if event == "Enter":
+#                 if (values["name"] and values["password"]):
+#                     window.close()
+#                     tempPassword = Password(len(passwords), values["name"], values["username"], values["password"], values["comment"])
+#                     passwords.append(tempPassword)
+#                     updateTable(rootWindow, passwords, selectIndex=len(passwords) - 1)
+#                 else:
+#                     sg.popup_auto_close("name/password need to be filled")
+#         window.close()
+#     elif event == "Edit":
+#         pass
+#         #BELOW IS NOT WORKED ON
+#         if(rootValues["-passwordTable-"] != []):
+#                 #find selected row ID value, not simple because nameSearch can be applied
+#                 selectedRow = rootValues["-passwordTable-"][0]
+#                 selectedPasswordID = window["-passwordTable-"].Values[selectedRow][0]
+#                 #if user click accept
+                
+#                 if((tempFields := passwordRequestForm(sg, passwords[selectedPasswordID])) != None):
+#                     tempPassword = Password(selectedPasswordID, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
+#                     passwords[selectedPasswordID] = tempPassword
+#                     updateTable(window, passwords, nameSearch=values["nameSearch"])
+def searchPasswordIndex(passwords, id):
+    for index, password in enumerate(passwords):
+        if id == password.id:
+            return index
 def passwordDeleteForm(sg, rootWindow, rootValues,passwords):
     if(rootValues["-passwordTable-"] != []):
         layout = [
@@ -171,8 +225,10 @@ def passwordDeleteForm(sg, rootWindow, rootValues,passwords):
             if(eventDelete == sg.WIN_CLOSED or eventDelete == 'No'):
                 break
             if(eventDelete == "Yes"):
-                passwords.pop(rootValues["-passwordTable-"][0])
-                updateTable(rootWindow, passwords)
+                selectedRow = rootValues["-passwordTable-"][0]
+                selectedPasswordID = rootWindow["-passwordTable-"].Values[selectedRow][0]
+                passwords.pop(searchPasswordIndex(passwords, selectedPasswordID))
+                updateTable(rootWindow, passwords, nameSearch=rootValues["nameSearch"])
                 deleteWindow.close()
                 return
         deleteWindow.close()
