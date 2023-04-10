@@ -107,9 +107,10 @@ def programLoop(sg, window, passwords, hashedKey):
                 selectedRow = values["-passwordTable-"][0]
                 selectedPasswordID = window["-passwordTable-"].Values[selectedRow][0]
                 #if user click accept
-                if((tempFields := passwordRequestForm(sg, passwords[selectedPasswordID])) != None):
+                passwordIndex = searchPasswordIndex(passwords, selectedPasswordID)
+                if((tempFields := passwordRequestForm(sg, passwords[passwordIndex])) != None):
                     tempPassword = Password(selectedPasswordID, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
-                    passwords[selectedPasswordID] = tempPassword
+                    passwords[passwordIndex] = tempPassword
                     updateTable(window, passwords, nameSearch=values["nameSearch"])
         elif event == "Delete":
             passwordDeleteForm(sg, window, values, passwords)
