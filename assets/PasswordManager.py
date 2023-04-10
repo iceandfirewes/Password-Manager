@@ -4,6 +4,7 @@ from .EncryptDecrypt import encrypt, decrypt, getMetadata
 from .Conversion import plaintextToJSON, JSONToPlaintext, Password
 from .ImportExport import exportJSON, importJSON
 import csv
+import random
 version = "1.3.0"
 data = None
 def PasswordsManager(sg, passwords, hashedKey):
@@ -155,6 +156,13 @@ def programLoop(sg, window, passwords, hashedKey):
             exportJSON(sg, passwords, version)
         elif event == "Import from JSON":
             importJSON(sg, window, passwords)
+        #HOTKEY
+        elif event == "Password Copy":
+            if(values["-passwordTable-"] != []):
+                selectedRow = values["-passwordTable-"][0]
+                selectedPasswordID = window["-passwordTable-"].Values[selectedRow][0]
+                pyperclip.copy(passwords[searchPasswordIndex(passwords, selectedPasswordID)].password)
+            pass
     window.close()
 #LEGACY psswordRequestForm
 # def passwordRequestForm(sg, password=None):
@@ -184,7 +192,7 @@ def passwordRequestForm(sg, rootWindow, passwords, rootValues, action, password=
     layout = [  [sg.Text("Name and Password is the minimum")],
             [sg.Text("Name"), sg.Push(), sg.InputText(default_text="" if password == None else password.name, key="name", size=20)],
             [sg.Text("Username"), sg.Push(), sg.InputText(default_text="" if password == None else password.username,key="username", size=20)],
-            [sg.Text("Password"), sg.Push(), sg.InputText(default_text="" if password == None else password.password,key="password", size=20)],
+            [sg.Text("Password"), sg.Button("Generate"), sg.InputText(default_text="" if password == None else password.password,key="password", size=20)],
             [sg.Text("Comment"), sg.Push(), sg.InputText(default_text="" if password == None else password.comment, key="comment", size=20)],
             [sg.Button("Enter", bind_return_key=True)] ]
     window = sg.Window("Password Form", layout, modal=True, finalize=True)
@@ -196,24 +204,32 @@ def passwordRequestForm(sg, rootWindow, passwords, rootValues, action, password=
         # print(f"""event: {event}\nvalue:{values}""")
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
-        elif (event == "Enter" and (values["name"] and values["password"])):
-            if action == "Add":
-                id = 0 if passwords[-1:] == [] else passwords[-1].id + 1
-                # updateTable(window, passwords, selectIndex=len(passwords) - 1)
-                tempPassword = Password(id, values["name"], values["username"], values["password"], values["comment"])
-                passwords.append(tempPassword)
-                updateTable(rootWindow, passwords, selectPassword=tempPassword,nameSearch=rootValues["nameSearch"])
-                break
-            elif action == "Edit":
-                selectedRow = rootValues["-passwordTable-"][0]
-                selectedPasswordID = rootWindow["-passwordTable-"].Values[selectedRow][0]
-                passwordIndex = searchPasswordIndex(passwords, selectedPasswordID)
-                tempPassword = Password(selectedPasswordID, values["name"], values["username"], values["password"], values["comment"])
-                passwords[passwordIndex] = tempPassword
-                updateTable(rootWindow, passwords, selectPassword=tempPassword, nameSearch=rootValues["nameSearch"])
-                break
-        else:
-            sg.popup_auto_close("name/password need to be filled")
+        elif event == "Enter":
+            if values["name"] and values["password"]:
+                if action == "Add":
+                    id = 0 if passwords[-1:] == [] else passwords[-1].id + 1
+                    # updateTable(window, passwords, selectIndex=len(passwords) - 1)
+                    tempPassword = Password(id, values["name"], values["username"], values["password"], values["comment"])
+                    passwords.append(tempPassword)
+                    updateTable(rootWindow, passwords, selectPassword=tempPassword,nameSearch=rootValues["nameSearch"])
+                    break
+                elif action == "Edit":
+                    selectedRow = rootValues["-passwordTable-"][0]
+                    selectedPasswordID = rootWindow["-passwordTable-"].Values[selectedRow][0]
+                    passwordIndex = searchPasswordIndex(passwords, selectedPasswordID)
+                    tempPassword = Password(selectedPasswordID, values["name"], values["username"], values["password"], values["comment"])
+                    passwords[passwordIndex] = tempPassword
+                    updateTable(rootWindow, passwords, selectPassword=tempPassword, nameSearch=rootValues["nameSearch"])
+                    break
+            else:
+                sg.popup_auto_close("name/password need to be filled")
+        elif event == "Generate":
+            generatedPassword = ""
+            allowableCharacter = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!()?[]`~;:#$%^&*+="
+            for i in range(13):
+                generatedPassword += random.choice(allowableCharacter)
+            window["password"].update(generatedPassword)
+        
     window.close()
 def searchPasswordIndex(passwords, id):
     for index, password in enumerate(passwords):
