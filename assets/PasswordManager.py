@@ -68,15 +68,19 @@ def initializeUI(sg, passwords):
                 [sg.Column([[sg.Button('Add'), sg.Button('E̲dit', key='Edit'), sg.Button('D̲elete', key='Delete'), sg.Button("S̲ave", key='Save'), sg.Button('Ex̲it', key='Exit'), sg.Button("Copy To Clipboard"), sg.Button("Import CSV")]],justification='center')]]
     return sg.Window('Password Manager', layout, size=(1000, 300), finalize=True)
 
-def updateTable(window, passwords, selectIndex=None, nameSearch=None):
+def updateTable(window, passwords, selectPassword=None, nameSearch=None):
     if nameSearch:
         #filter password so it only contain password that have nameSearch in them. then map over those passwords
         filteredPasswords = list(filter(lambda password: nameSearch in password.name ,passwords))
         window["-passwordTable-"].update(list(map(lambda password: [password.id, password.name, password.username, password.password, password.comment], filteredPasswords)))
     else:
         window["-passwordTable-"].update(list(map(lambda password: [password.id, password.name, password.username, password.password, password.comment], passwords)))
-    if(selectIndex != None):
-        window["-passwordTable-"].update(select_rows=[selectIndex])
+    # if(selectIndex != None):
+    #     window["-passwordTable-"].update(select_rows=[selectIndex])
+    if selectPassword != None:
+        for index, password in enumerate(window["-passwordTable-"].Values):
+            if password[0] == selectPassword.id:
+                window["-passwordTable-"].update(select_rows=[index])
 def programLoop(sg, window, passwords, hashedKey):
     global data
     # global version
@@ -93,28 +97,35 @@ def programLoop(sg, window, passwords, hashedKey):
             updateTable(window, passwords, nameSearch=values["nameSearch"])
         #MAIN MENU
         elif event == "Add":
+            passwordRequestForm(sg, window, passwords, values, "Add")
             # passwordRequestFormTest(sg, window, passwords, values, event)
-            if (tempFields := passwordRequestForm(sg))  != None:
-                #get last item id
-                id = 0 if passwords[-1:] == [] else passwords[-1].id + 1
-                tempPassword = Password(id, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
-                passwords.append(tempPassword)
-                updateTable(window, passwords, selectIndex=len(passwords) - 1)
+            # if (tempFields := passwordRequestForm(sg))  != None:
+                # #get last item id
+                # id = 0 if passwords[-1:] == [] else passwords[-1].id + 1
+                # tempPassword = Password(id, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
+                # passwords.append(tempPassword)
+                # updateTable(window, passwords, selectIndex=len(passwords) - 1)
         elif event == "Edit":
-            #if a row is selected
+            # passwordRequestFormTest(sg, window, passwords, values, "Edit")
+            # if a row is selected
             if(values["-passwordTable-"] != []):
-                #find selected row ID value, not simple because nameSearch can be applied
+                # #find selected row ID value, not simple because nameSearch can be applied
+                # selectedRow = values["-passwordTable-"][0]
+                # selectedPasswordID = window["-passwordTable-"].Values[selectedRow][0]
+                # #if user click accept
+                # passwordIndex = searchPasswordIndex(passwords, selectedPasswordID)
+                # if((tempFields := passwordRequestForm(sg, passwords[passwordIndex])) != None):
+                #     tempPassword = Password(selectedPasswordID, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
+                #     passwords[passwordIndex] = tempPassword
+                #     updateTable(window, passwords, nameSearch=values["nameSearch"])
                 selectedRow = values["-passwordTable-"][0]
                 selectedPasswordID = window["-passwordTable-"].Values[selectedRow][0]
-                #if user click accept
                 passwordIndex = searchPasswordIndex(passwords, selectedPasswordID)
-                if((tempFields := passwordRequestForm(sg, passwords[passwordIndex])) != None):
-                    tempPassword = Password(selectedPasswordID, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
-                    passwords[passwordIndex] = tempPassword
-                    updateTable(window, passwords, nameSearch=values["nameSearch"])
+                passwordRequestForm(sg, window, passwords, values, "Edit", passwords[passwordIndex])
         elif event == "Delete":
             passwordDeleteForm(sg, window, values, passwords)
         elif event == "Save":
+            print(len(window["-passwordTable-"].Values))
             encrypt(hashedKey, JSONToPlaintext(data,version))
         elif event == sg.WIN_CLOSED or event == 'Exit':
             if(len(passwords)):
@@ -145,14 +156,37 @@ def programLoop(sg, window, passwords, hashedKey):
         elif event == "Import from JSON":
             importJSON(sg, window, passwords)
     window.close()
-
-def passwordRequestForm(sg, password=None):
+#LEGACY psswordRequestForm
+# def passwordRequestForm(sg, password=None):
+#     layout = [  [sg.Text("Name and Password is the minimum")],
+#                 [sg.Text("Name"), sg.Push(), sg.InputText(default_text="" if password == None else password.name, key="name", size=20)],
+#                 [sg.Text("Username"), sg.Push(), sg.InputText(default_text="" if password == None else password.username,key="username", size=20)],
+#                 [sg.Text("Password"), sg.Push(), sg.InputText(default_text="" if password == None else password.password,key="password", size=20)],
+#                 [sg.Text("Comment"), sg.Push(), sg.InputText(default_text="" if password == None else password.comment, key="comment", size=20)],
+#                 [sg.Button("Enter", bind_return_key=True)] ]
+#     window = sg.Window("Password Form", layout, modal=True, finalize=True)
+#     window.bind('<Return>',"Enter")
+#     window.bind('<Escape>',"Exit")
+#     while True:
+#         event, values = window.read()
+#         #DEBUG
+#         # print(f"""event: {event}\nvalue:{values}""")
+#         if event == "Exit" or event == sg.WIN_CLOSED:
+#             break
+#         if event == "Enter":
+#             if (values["name"] and values["password"]):
+#                 window.close()
+#                 return {"name":values["name"], "username":values["username"], "password":values["password"], "comment":values["comment"]}
+#             else:
+#                 sg.popup_auto_close("name/password need to be filled")
+#     window.close()
+def passwordRequestForm(sg, rootWindow, passwords, rootValues, action, password=None):
     layout = [  [sg.Text("Name and Password is the minimum")],
-                [sg.Text("Name"), sg.Push(), sg.InputText(default_text="" if password == None else password.name, key="name", size=20)],
-                [sg.Text("Username"), sg.Push(), sg.InputText(default_text="" if password == None else password.username,key="username", size=20)],
-                [sg.Text("Password"), sg.Push(), sg.InputText(default_text="" if password == None else password.password,key="password", size=20)],
-                [sg.Text("Comment"), sg.Push(), sg.InputText(default_text="" if password == None else password.comment, key="comment", size=20)],
-                [sg.Button("Enter", bind_return_key=True)] ]
+            [sg.Text("Name"), sg.Push(), sg.InputText(default_text="" if password == None else password.name, key="name", size=20)],
+            [sg.Text("Username"), sg.Push(), sg.InputText(default_text="" if password == None else password.username,key="username", size=20)],
+            [sg.Text("Password"), sg.Push(), sg.InputText(default_text="" if password == None else password.password,key="password", size=20)],
+            [sg.Text("Comment"), sg.Push(), sg.InputText(default_text="" if password == None else password.comment, key="comment", size=20)],
+            [sg.Button("Enter", bind_return_key=True)] ]
     window = sg.Window("Password Form", layout, modal=True, finalize=True)
     window.bind('<Return>',"Enter")
     window.bind('<Escape>',"Exit")
@@ -162,52 +196,25 @@ def passwordRequestForm(sg, password=None):
         # print(f"""event: {event}\nvalue:{values}""")
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
-        if event == "Enter":
-            if (values["name"] and values["password"]):
-                window.close()
-                return {"name":values["name"], "username":values["username"], "password":values["password"], "comment":values["comment"]}
-            else:
-                sg.popup_auto_close("name/password need to be filled")
+        elif (event == "Enter" and (values["name"] and values["password"])):
+            if action == "Add":
+                id = 0 if passwords[-1:] == [] else passwords[-1].id + 1
+                # updateTable(window, passwords, selectIndex=len(passwords) - 1)
+                tempPassword = Password(id, values["name"], values["username"], values["password"], values["comment"])
+                passwords.append(tempPassword)
+                updateTable(rootWindow, passwords, selectPassword=tempPassword,nameSearch=rootValues["nameSearch"])
+                break
+            elif action == "Edit":
+                selectedRow = rootValues["-passwordTable-"][0]
+                selectedPasswordID = rootWindow["-passwordTable-"].Values[selectedRow][0]
+                passwordIndex = searchPasswordIndex(passwords, selectedPasswordID)
+                tempPassword = Password(selectedPasswordID, values["name"], values["username"], values["password"], values["comment"])
+                passwords[passwordIndex] = tempPassword
+                updateTable(rootWindow, passwords, selectPassword=tempPassword, nameSearch=rootValues["nameSearch"])
+                break
+        else:
+            sg.popup_auto_close("name/password need to be filled")
     window.close()
-# def passwordRequestFormTest(sg, rootWindow, passwords, rootValues, event, password=None):
-#     if event == "Add":
-#         layout = [  [sg.Text("Name and Password is the minimum")],
-#                 [sg.Text("Name"), sg.Push(), sg.InputText(default_text="" if password == None else password.name, key="name", size=20)],
-#                 [sg.Text("Username"), sg.Push(), sg.InputText(default_text="" if password == None else password.username,key="username", size=20)],
-#                 [sg.Text("Password"), sg.Push(), sg.InputText(default_text="" if password == None else password.password,key="password", size=20)],
-#                 [sg.Text("Comment"), sg.Push(), sg.InputText(default_text="" if password == None else password.comment, key="comment", size=20)],
-#                 [sg.Button("Enter", bind_return_key=True)] ]
-#         window = sg.Window("Password Form", layout, modal=True, finalize=True)
-#         window.bind('<Return>',"Enter")
-#         window.bind('<Escape>',"Exit")
-#         while True:
-#             event, values = window.read()
-#             #DEBUG
-#             # print(f"""event: {event}\nvalue:{values}""")
-#             if event == "Exit" or event == sg.WIN_CLOSED:
-#                 break
-#             if event == "Enter":
-#                 if (values["name"] and values["password"]):
-#                     window.close()
-#                     tempPassword = Password(len(passwords), values["name"], values["username"], values["password"], values["comment"])
-#                     passwords.append(tempPassword)
-#                     updateTable(rootWindow, passwords, selectIndex=len(passwords) - 1)
-#                 else:
-#                     sg.popup_auto_close("name/password need to be filled")
-#         window.close()
-#     elif event == "Edit":
-#         pass
-#         #BELOW IS NOT WORKED ON
-#         if(rootValues["-passwordTable-"] != []):
-#                 #find selected row ID value, not simple because nameSearch can be applied
-#                 selectedRow = rootValues["-passwordTable-"][0]
-#                 selectedPasswordID = window["-passwordTable-"].Values[selectedRow][0]
-#                 #if user click accept
-                
-#                 if((tempFields := passwordRequestForm(sg, passwords[selectedPasswordID])) != None):
-#                     tempPassword = Password(selectedPasswordID, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
-#                     passwords[selectedPasswordID] = tempPassword
-#                     updateTable(window, passwords, nameSearch=values["nameSearch"])
 def searchPasswordIndex(passwords, id):
     for index, password in enumerate(passwords):
         if id == password.id:
