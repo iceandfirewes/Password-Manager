@@ -1,11 +1,11 @@
 import os
 import pyperclip
-from .EncryptDecrypt import encrypt, decrypt, getMetadata
+from .EncryptDecrypt import encrypt, decrypt
 from .Conversion import plaintextToJSON, JSONToPlaintext, Password
 from .ImportExport import exportJSON, importJSON
 import csv
 import random
-version = "1.3.0"
+version = "2.2.0"
 data = None
 def PasswordsManager(sg, passwords, hashedKey):
     window = initializeUI(sg, passwords)
@@ -41,14 +41,10 @@ def verify(sg, hashedKey):
         sg.Popup("One of the .data file is missing. Please supply them or delete both passwordManagerData.data and passwordManagerMetadata.dat to reset.")
 
 def initializeUI(sg, passwords):
-    sg.theme('DarkAmber')   # Add a touch of color
+    sg.theme('DarkAmber')
     #table
     toprow =  ["ID","Name","Username","Password","Comment"]
     rows = list(map(lambda password:  [password.id, password.name, password.username, password.password, password.comment], passwords))
-    # rows = list(map(lambda password: [password["id"], password["name"], password["username"], password["password"], password["comment"]], passwords))
-    
-    # toprow =  ["ID","Name","Username","Password","Comment"]
-    # rows = [[index, password.name, password.username, password.password, password.comment] for index,password in enumerate(passwords)]
     passwordsTable = sg.Table(values=rows, headings=toprow,
     auto_size_columns=False,
     display_row_numbers=False,
@@ -99,26 +95,9 @@ def programLoop(sg, window, passwords, hashedKey):
         #MAIN MENU
         elif event == "Add":
             passwordRequestForm(sg, window, passwords, values, "Add")
-            # passwordRequestFormTest(sg, window, passwords, values, event)
-            # if (tempFields := passwordRequestForm(sg))  != None:
-                # #get last item id
-                # id = 0 if passwords[-1:] == [] else passwords[-1].id + 1
-                # tempPassword = Password(id, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
-                # passwords.append(tempPassword)
-                # updateTable(window, passwords, selectIndex=len(passwords) - 1)
         elif event == "Edit":
-            # passwordRequestFormTest(sg, window, passwords, values, "Edit")
             # if a row is selected
             if(values["-passwordTable-"] != []):
-                # #find selected row ID value, not simple because nameSearch can be applied
-                # selectedRow = values["-passwordTable-"][0]
-                # selectedPasswordID = window["-passwordTable-"].Values[selectedRow][0]
-                # #if user click accept
-                # passwordIndex = searchPasswordIndex(passwords, selectedPasswordID)
-                # if((tempFields := passwordRequestForm(sg, passwords[passwordIndex])) != None):
-                #     tempPassword = Password(selectedPasswordID, tempFields["name"], tempFields["username"], tempFields["password"], tempFields["comment"])
-                #     passwords[passwordIndex] = tempPassword
-                #     updateTable(window, passwords, nameSearch=values["nameSearch"])
                 selectedRow = values["-passwordTable-"][0]
                 selectedPasswordID = window["-passwordTable-"].Values[selectedRow][0]
                 passwordIndex = searchPasswordIndex(passwords, selectedPasswordID)
@@ -162,7 +141,6 @@ def programLoop(sg, window, passwords, hashedKey):
                 selectedRow = values["-passwordTable-"][0]
                 selectedPasswordID = window["-passwordTable-"].Values[selectedRow][0]
                 pyperclip.copy(passwords[searchPasswordIndex(passwords, selectedPasswordID)].password)
-            pass
     window.close()
 #LEGACY psswordRequestForm
 # def passwordRequestForm(sg, password=None):
