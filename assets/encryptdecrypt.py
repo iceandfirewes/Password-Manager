@@ -1,5 +1,4 @@
 from Crypto.Cipher import AES 
-import hashlib
 def encrypt(hashedKey, plaintext):
     #create the cipher
     cipher = AES.new(hashedKey, AES.MODE_EAX)
